@@ -25,7 +25,7 @@ class TableForm extends FormBase {
    * @var array
    *   Array with counts.
    */
-  private $rows = [3, 2, 5];
+  protected $rows = [1];
 
   /**
    * Contain count tables on page.
@@ -33,21 +33,12 @@ class TableForm extends FormBase {
    * @var array
    *   Count tables.
    */
-  private $countTable = 3;
+  protected $countTable = 1;
 
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
-    $form['add-table'] = [
-      '#type' => 'button',
-      '#value' => $this->t('Add table'),
-      '#ajax' => [
-        'event' => 'click',
-        'callback' => '::addTable',
-      ],
-    ];
 
     $table_headers = [
       $this->t('Year'),
@@ -70,7 +61,16 @@ class TableForm extends FormBase {
       $this->t('YTD'),
     ];
 
-    for ($table = 0; $table < $this->countTable; $table++) {
+    $form['add-table'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Add table'),
+      '#submit' => ['::addTable'],
+      '#attributes' => [
+        'class' => ['add-table-btn'],
+      ],
+    ];
+
+    for ($table = 1; $table < $this->countTable; $table++) {
 
       $form["table-$table"] = [
         '#type' => 'table',
@@ -96,22 +96,39 @@ class TableForm extends FormBase {
           else {
             $form["table-$table"][$i]["$header"] = [
               '#type' => 'number',
+              '#default_value' => 0,
             ];
           }
         }
       }
 
-      $form["addRow_$table"] = [
-        '#type' => 'button',
+      $form["add-row-$table"] = [
+        '#type' => 'submit',
         '#value' => $this->t("Add row"),
-        '#ajax' => [
-          'event' => 'click',
-          'callback' => '::addRow',
+        '#name' => $table,
+        "#submit" => ["::addRow"],
+        '#attributes' => [
+          'class' => ['add-row-btn'],
         ],
       ];
     }
 
+    $form['action']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Submit'),
+    ];
+
     $form["#attached"]["library"][] = "module4/module4";
+    return $form;
+  }
+
+  /**
+   * Callback function for add new table.
+   */
+  public function addTable(array &$form, FormStateInterface $form_state) {
+    $this->countTable++;
+    $this->rows[] = 1;
+    $form_state->setRebuild();
     return $form;
   }
 
@@ -122,10 +139,7 @@ class TableForm extends FormBase {
     $i = $form_state->getTriggeringElement()['#name'];
     $this->rows[$i]++;
     $form_state->setRebuild();
-
-    $response = new AjaxResponse();
-    $response->addCommand(new MessageCommand("$i"));
-    return $response;
+    return $form;
   }
 
   /**
