@@ -1,0 +1,12 @@
+table input {
+  max-width: 45px;
+  margin: 0;
+}
+table td div {
+  width: 45px;
+}
+table tr td, table tr th, table tr {
+  border: none;
+}
+
+/*# sourceMappingURL=table.css.map */

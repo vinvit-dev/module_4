@@ -1,0 +1,5 @@
+module4:
+  version: 1.x
+  css:
+    theme:
+      css/table.css: {}

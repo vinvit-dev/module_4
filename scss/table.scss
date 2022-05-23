@@ -1,0 +1,12 @@
+table {
+  input {
+    max-width: 45px;
+    margin: 0;
+  }
+  td div{
+    width: 45px;
+  }
+  tr td, tr th, tr{
+    border: none;
+  }
+}
