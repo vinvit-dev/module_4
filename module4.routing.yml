@@ -1,0 +1,7 @@
+module4.form_table:
+  path: 'vinvit/form_table'
+  defaults:
+    _form: '\Drupal\module4\Form\TableForm'
+    _title: 'Table Form'
+  requirements:
+    _permission: 'access content'

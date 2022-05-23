@@ -1,0 +1,7 @@
+module4.demo:
+  title: 'Table Form'
+  description: 'Module 4 page'
+  parent: main
+  menu_name: main
+  route_name: module4.form_table
+  weight: 100
