@@ -4,8 +4,6 @@ namespace Drupal\module4\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateinterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\MessageCommand;
 
 /**
  * Main class for form table.
@@ -25,7 +23,7 @@ class TableForm extends FormBase {
    * @var array
    *   Array with counts.
    */
-  protected $rows = [1];
+  protected $rows = [0, 1];
 
   /**
    * Contain count tables on page.
@@ -61,6 +59,47 @@ class TableForm extends FormBase {
       $this->t('YTD'),
     ];
 
+    for ($table = 1; $table <= $this->countTable; $table++) {
+
+      $form["add-row-$table"] = [
+        '#type' => 'submit',
+        '#value' => $this->t("Add year"),
+        '#name' => $table,
+        "#submit" => ["::addRow"],
+        '#attributes' => [
+          'class' => ['add-row-btn'],
+        ],
+      ];
+
+      $form["table-$table"] = [
+        '#type' => 'table',
+        '#header' => $table_headers,
+      ];
+
+      for ($i = $this->rows[$table]; $i > 0; $i--) {
+        foreach ($table_headers as $header) {
+          if ($header == 'Year') {
+            $form["table-$table"][$i]["$header"] = [
+              "#type" => "number",
+              "#disabled" => TRUE,
+              '#default_value' => date('Y') - $i + 1,
+            ];
+          }
+          elseif (in_array($header, ['Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
+            $form["table-$table"][$i]["$header"] = [
+              "#type" => "number",
+              "#disabled" => TRUE,
+            ];
+          }
+          else {
+            $form["table-$table"][$i]["$header"] = [
+              '#type' => 'number',
+            ];
+          }
+        }
+      }
+    }
+
     $form['add-table'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add table'),
@@ -70,50 +109,7 @@ class TableForm extends FormBase {
       ],
     ];
 
-    for ($table = 1; $table < $this->countTable; $table++) {
-
-      $form["table-$table"] = [
-        '#type' => 'table',
-        '#header' => $table_headers,
-      ];
-
-      for ($i = 0; $i < $this->rows[$table]; $i++) {
-        foreach ($table_headers as $header) {
-          if ($header == 'Year') {
-            $form["table-$table"][$i]["$header"] = [
-              '#type' => 'html_tag',
-              '#tag' => 'div',
-              '#value' => date('Y') - $i,
-            ];
-          }
-          elseif (in_array($header, ['Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
-            $form["table-$table"][$i]["$header"] = [
-              '#type' => 'html_tag',
-              '#tag' => 'div',
-              '#value' => 0,
-            ];
-          }
-          else {
-            $form["table-$table"][$i]["$header"] = [
-              '#type' => 'number',
-              '#default_value' => 0,
-            ];
-          }
-        }
-      }
-
-      $form["add-row-$table"] = [
-        '#type' => 'submit',
-        '#value' => $this->t("Add row"),
-        '#name' => $table,
-        "#submit" => ["::addRow"],
-        '#attributes' => [
-          'class' => ['add-row-btn'],
-        ],
-      ];
-    }
-
-    $form['action']['submit'] = [
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
     ];
@@ -146,7 +142,6 @@ class TableForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
   }
 
 }

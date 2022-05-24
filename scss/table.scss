@@ -1,12 +1,13 @@
 table {
   input {
-    max-width: 45px;
+    max-width: 50px;
     margin: 0;
   }
   td div{
-    width: 45px;
+    max-width: 50px;
   }
   tr td, tr th, tr{
     border: none;
+    padding: 5px;
   }
 }
