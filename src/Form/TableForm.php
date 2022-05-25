@@ -4,6 +4,7 @@ namespace Drupal\module4\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateinterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Main class for form table.
@@ -23,7 +24,7 @@ class TableForm extends FormBase {
    * @var array
    *   Array with counts.
    */
-  protected $rows = [0, 1];
+  protected $rows = [1];
 
   /**
    * Contain count tables on page.
@@ -59,7 +60,7 @@ class TableForm extends FormBase {
       $this->t('YTD'),
     ];
 
-    for ($table = 1; $table <= $this->countTable; $table++) {
+    for ($table = 0; $table < $this->countTable; $table++) {
 
       $form["add-row-$table"] = [
         '#type' => 'submit',
@@ -104,14 +105,12 @@ class TableForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Add table'),
       '#submit' => ['::addTable'],
-      '#attributes' => [
-        'class' => ['add-table-btn'],
-      ],
     ];
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
+      '#name' => 'submit',
     ];
 
     $form["#attached"]["library"][] = "module4/module4";
@@ -125,7 +124,6 @@ class TableForm extends FormBase {
     $this->countTable++;
     $this->rows[] = 1;
     $form_state->setRebuild();
-    return $form;
   }
 
   /**
@@ -135,7 +133,39 @@ class TableForm extends FormBase {
     $i = $form_state->getTriggeringElement()['#name'];
     $this->rows[$i]++;
     $form_state->setRebuild();
-    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    if ($i = $form_state->getTriggeringElement()['#name'] !== 'submit') {
+      return;
+    }
+
+    $values = $form_state->getValues();
+
+    for ($t = 0; $t < $this->countTable; $t++) {
+      $isValue = FALSE;
+      $isEmpty = FALSE;
+      for ($r = $this->rows[$t]; $r > 0; $r--) {
+        foreach ($values["table-$t"][$r] as $head => $val) {
+          if (in_array($head, ['Year', 'Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
+            continue;
+          }
+          if (!$isValue && !$isEmpty && $val !== '') {
+            $isValue = TRUE;
+          }
+          if ($isValue && !$isEmpty && $val == '') {
+            $isEmpty = TRUE;
+            $isValue = FALSE;
+          }
+          if (!$isValue && $isEmpty && $val !== '') {
+            $form_state->setErrorByName('Invalid', 'Invalid');
+          }
+        }
+      }
+    }
   }
 
   /**

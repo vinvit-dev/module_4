@@ -1,13 +1,19 @@
-table {
-  input {
-    max-width: 50px;
+.form-table {
+  table {
+    margin-bottom: 50px;
+    input {
+      max-width: 50px;
+      margin: 0;
+    }
+    td div{
+      max-width: 50px;
+    }
+    tr td, tr th, tr{
+      border: none;
+      padding: 5px;
+    }
+  }
+  .button {
     margin: 0;
-  }
-  td div{
-    max-width: 50px;
-  }
-  tr td, tr th, tr{
-    border: none;
-    padding: 5px;
   }
 }
