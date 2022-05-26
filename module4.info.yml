@@ -1,6 +1,6 @@
-name: 'Module 4'
+name: "Module 4"
 type: module
-description: 'This is 4th module'
+description: "This is 4th module"
 
-package: 'Custom'
+package: "Custom"
 core_version_requirement: ^9
