@@ -38,6 +38,7 @@ class TableForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
+    // Array that contain all table headers.
     $table_headers = [
       $this->t("Year"),
       $this->t("Jan"),
@@ -62,6 +63,7 @@ class TableForm extends FormBase {
     $form["#prefix"] = "<div id='form-wrapper'>";
     $form["#suffix"] = "</div>";
 
+    // Loop by tables.
     for ($table = 0; $table < $this->countTable; $table++) {
 
       $form["add-row-$table"] = [
@@ -79,7 +81,10 @@ class TableForm extends FormBase {
         "#header" => $table_headers,
       ];
 
+      // Loop by rows.
       for ($i = $this->rows[$table]; $i > 0; $i--) {
+
+        // Loop by columns.
         foreach ($table_headers as $header) {
           if ($header == "Year") {
             $form["table-$table"][$i]["$header"] = [
@@ -176,10 +181,16 @@ class TableForm extends FormBase {
 
         // Loop by table headres.
         foreach ($values["table-$t"][$r] as $head => $val) {
+
+          // Validate on disabled columns.
           if (in_array($head, ["Year", "Q1", "Q2", "Q3", "Q4", "YTD"])) {
             continue;
           }
+
+          // Validate table size.
           if ($r <= $this->rows[$smallestTable]) {
+
+            // Other vaidation.
             if (!$isValue && !$isEmpty && $val !== "") {
               $isValue = TRUE;
             }
@@ -214,6 +225,8 @@ class TableForm extends FormBase {
       for ($r = $this->rows[$t]; $r > 0; $r--) {
         $q1 = $q2 = $q3 = $q4 = 0;
         $val = $form_state->getValue(["table-$t", $r]);
+
+        // Check month fields.
         if ($val["Jan"] != "" || $val["Feb"] != "" || $val["Mar"] != "") {
           $q1 = round(((int) $val["Jan"] + (int) $val["Feb"] + (int) $val["Mar"] + 1) / 3, 2);
         }
@@ -227,16 +240,18 @@ class TableForm extends FormBase {
           $q4 = round(((int) $val["Oct"] + (int) $val["Nov"] + (int) $val["Dec"] + 1) / 3, 2);
         }
 
+        // Set new values to quartets.
         $form["table-$t"]["$r"]["Q1"]["#value"] = $q1;
         $form["table-$t"]["$r"]["Q2"]["#value"] = $q2;
         $form["table-$t"]["$r"]["Q3"]["#value"] = $q3;
         $form["table-$t"]["$r"]["Q4"]["#value"] = $q4;
 
+        // Find and set new value to YTD.
         $ytd = round(($q1 + $q2 + $q3 + $q4 + 1) / 4, 2);
         $form["table-$t"]["$r"]["YTD"]["#value"] = $ytd;
       }
     }
-
+    // Success message.
     $this->messenger()->addStatus("Valid");
   }
 
