@@ -13,7 +13,7 @@ class TableForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId(): string {
+  public function getFormId() {
     return 'form_table';
   }
 
@@ -36,7 +36,7 @@ class TableForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state): array {
+  public function buildForm(array $form, FormStateInterface $form_state) {
 
     // Array that contain all table headers.
     $table_headers = [
@@ -64,51 +64,43 @@ class TableForm extends FormBase {
     $form['#suffix'] = '</div>';
 
     // Loop by tables.
-    for ($table = 0; $table < $this->countTable; $table++) {
+    for ($t = 0; $t < $this->countTable; $t++) {
 
-      $form['add-row-$table'] = [
+      $form["add_row_{$t}"] = [
         '#type' => 'submit',
         '#value' => $this->t('Add year'),
-        '#name' => $table,
+        '#name' => $t,
         '#submit' => ['::addRow'],
-        '#ajax' => [
-          'wrapper' => 'form-wrapper',
-        ],
       ];
 
-      $form["table-$table"] = [
+      $form["table_{$t}"] = [
         '#type' => 'table',
         '#header' => $table_headers,
       ];
 
       // Loop by rows.
-      for ($i = $this->rows[$table]; $i > 0; $i--) {
+      for ($i = $this->rows[$t]; $i > 0; $i--) {
 
         // Loop by columns.
         foreach ($table_headers as $header) {
+          $disabled = FALSE;
+          $value = NULL;
           if ($header == 'Year') {
-            $form["table-$table"][$i]["$header"] = [
-              '#type' => 'number',
-              '#disabled' => TRUE,
-              '#default_value' => date('Y') - $i + 1,
-            ];
+            $value = date('Y') - $i + 1;
           }
-          elseif (in_array($header, ['Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
-            $form["table-$table"][$i]["$header"] = [
-              '#type' => 'number',
-              '#disabled' => TRUE,
-            ];
+          if (in_array($header, ['Year', 'Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
+            $disabled = TRUE;
           }
-          else {
-            $form["table-$table"][$i]["$header"] = [
-              '#type' => 'number',
-            ];
-          }
+          $form["table_{$t}"][$i]["{$header}"] = [
+            '#type' => 'number',
+            '#disabled' => $disabled,
+            '#default_value' => $value ?? '',
+          ];
         }
       }
     }
 
-    $form['add-table'] = [
+    $form['add_table'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add table'),
       '#submit' => ['::addTable'],
@@ -149,9 +141,10 @@ class TableForm extends FormBase {
    */
   public function addRow(array &$form, FormStateInterface $form_state) {
     // Get table id to add row.
-    $i = $form_state->getTriggeringElement()['#name'];
+    $t = $form_state->getTriggeringElement()['#name'];
     // Add one row.
-    $this->rows[$i]++;
+    $this->rows[$t]++;
+    print($t);
     // Rebuild form.
     $form_state->setRebuild();
   }
@@ -169,18 +162,18 @@ class TableForm extends FormBase {
     // Get all values from tables.
     $values = $form_state->getValues();
 
-    $smallestTable = array_search(min($this->rows), $this->rows);
+    $smallest_table = array_search(min($this->rows), $this->rows);
 
     // Loop by count tables.
     for ($t = 0; $t < $this->countTable; $t++) {
-      $isValue = FALSE;
-      $isEmpty = FALSE;
+      $is_value = FALSE;
+      $is_empty = FALSE;
 
       // Loop by rows in table.
       for ($r = $this->rows[$t]; $r > 0; $r--) {
 
         // Loop by table headers.
-        foreach ($values["table-$t"][$r] as $head => $val) {
+        foreach ($values["table_{$t}"][$r] as $head => $val) {
 
           // Validate on disabled columns.
           if (in_array($head, ['Year', 'Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
@@ -188,24 +181,24 @@ class TableForm extends FormBase {
           }
 
           // Validate table size.
-          if ($r <= $this->rows[$smallestTable]) {
+          if ($r <= $this->rows[$smallest_table]) {
 
             // Other validation.
-            if (!$isValue && !$isEmpty && $val !== '') {
-              $isValue = TRUE;
+            if (!$is_value && !$is_empty && $val !== '') {
+              $is_value = TRUE;
             }
-            if ($isValue && !$isEmpty && $val == '') {
-              $isEmpty = TRUE;
+            if ($is_value && !$is_empty && $val == '') {
+              $is_empty = TRUE;
             }
-            if (!$isValue && $isEmpty && $val !== '') {
+            if (!$is_value && $is_empty && $val !== '') {
               $form_state->setErrorByName('Invalid', $this->t('Invalid'));
             }
-            if ($isValue && $isEmpty && $val !== '') {
+            if ($is_value && $is_empty && $val !== '') {
               $form_state->setErrorByName('Invalid', $this->t('Invalid'));
             }
 
-            if ($values["table-$smallestTable"][$r][$head] == '' && $val !== '' ||
-              $values["table-$smallestTable"][$r][$head] !== '' && $val == '') {
+            if ($values["table_{$smallest_table}"][$r][$head] == '' && $val !== '' ||
+              $values["table_{$smallest_table}"][$r][$head] !== '' && $val == '') {
               $form_state->setErrorByName('Invalid', $this->t('Invalid'));
             }
           }
@@ -224,7 +217,7 @@ class TableForm extends FormBase {
     for ($t = 0; $t < $this->countTable; $t++) {
       for ($r = $this->rows[$t]; $r > 0; $r--) {
         $q1 = $q2 = $q3 = $q4 = 0;
-        $val = $form_state->getValue(["table-$t", $r]);
+        $val = $form_state->getValue(["table_{$t}", $r]);
 
         // Check month fields.
         if ((int) $val['Jan'] != '' || (int) $val['Feb'] != '' || (int) $val['Mar'] != '') {
@@ -241,14 +234,14 @@ class TableForm extends FormBase {
         }
 
         // Set new values to quartets.
-        $form["table-$t"][$r]['Q1']['#value'] = $q1;
-        $form["table-$t"][$r]['Q2']['#value'] = $q2;
-        $form["table-$t"][$r]['Q3']['#value'] = $q3;
-        $form["table-$t"][$r]['Q4']['#value'] = $q4;
+        $form["table_{$t}"][$r]['Q1']['#value'] = $q1;
+        $form["table_{$t}"][$r]['Q2']['#value'] = $q2;
+        $form["table_{$t}"][$r]['Q3']['#value'] = $q3;
+        $form["table_{$t}"][$r]['Q4']['#value'] = $q4;
 
         // Find and set new value to YTD.
         $ytd = round(($q1 + $q2 + $q3 + $q4 + 1) / 4, 2);
-        $form["table-$t"][$r]['YTD']['#value'] = $ytd;
+        $form["table_{$t}"][$r]['YTD']['#value'] = $ytd;
       }
     }
     // Success message.
