@@ -91,7 +91,7 @@ class TableForm extends FormBase {
           if (in_array($header, ['Year', 'Q1', 'Q2', 'Q3', 'Q4', 'YTD'])) {
             $disabled = TRUE;
           }
-          $form["table_{$t}"][$i]["{$header}"] = [
+          $form["table_{$t}"][$i]["{$header}"] = [ // just $header  dont work
             '#type' => 'number',
             '#disabled' => $disabled,
             '#default_value' => $value ?? '',
